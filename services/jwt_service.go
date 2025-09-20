@@ -1,19 +1,17 @@
 package services
 
 import (
-	"time"
-
 	"github.com/golang-jwt/jwt/v5"
 
 	"server_aquascan/config"
 )
 
-func GenerateJWT(userID int) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
-		"iat":     time.Now().Unix(),
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(config.JwtSecretKey)
+// GenerateJWT wrapper biar pemanggilan lebih rapi dari controller
+func GenerateJWT(userID uint) (string, error) {
+	return config.GenerateJWT(userID)
+}
+
+// ParseJWT wrapper juga kalau butuh validasi manual
+func ParseJWT(tokenString string) (*jwt.Token, error) {
+	return config.ParseJWT(tokenString)
 }

@@ -1,47 +1,42 @@
 package middleware
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"server_aquascan/config"
+	"server_aquascan/services"
 	"server_aquascan/utils"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Ambil token dari header Authorization
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			utils.RespondError(c, 401, "Authorization header dibutuhkan", nil)
-			c.Abort()
-			return
-		}
-
 		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			utils.RespondError(c, 401, "Format token tidak valid", nil)
+		if authHeader == "" || len(parts) != 2 || parts[0] != "Bearer" {
+			utils.RespondError(c, http.StatusUnauthorized, "Authorization header dibutuhkan atau format token tidak valid", nil)
 			c.Abort()
 			return
 		}
 
 		tokenString := parts[1]
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return config.JwtSecretKey, nil
-		})
 
+		// Parse dan validasi token
+		token, err := services.ParseJWT(tokenString)
 		if err != nil || !token.Valid {
-			utils.RespondError(c, 401, "Token tidak valid atau expired", err.Error())
+			utils.RespondError(c, http.StatusUnauthorized, "Token tidak valid atau expired", err.Error())
 			c.Abort()
 			return
 		}
 
+		// Set user_id ke context jika ada di claims
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			c.Set("user_id", claims["user_id"])
+			if uid, exists := claims["user_id"]; exists {
+				c.Set("user_id", uid)
+			}
 		}
 
 		c.Next()
