@@ -32,10 +32,16 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Set user_id ke context jika ada di claims
+		// Set claims ke context
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			if uid, exists := claims["user_id"]; exists {
 				c.Set("user_id", uid)
+			}
+			if email, exists := claims["email"]; exists {
+				c.Set("email", email)
+			}
+			if role, exists := claims["role"]; exists {
+				c.Set("role", role)
 			}
 		}
 

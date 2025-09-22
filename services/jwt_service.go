@@ -7,8 +7,8 @@ import (
 )
 
 // GenerateJWT wrapper biar pemanggilan lebih rapi dari controller
-func GenerateJWT(userID uint) (string, error) {
-	return config.GenerateJWT(userID)
+func GenerateJWT(userID uint, email string, role string) (string, error) {
+	return config.GenerateJWT(userID, email, role)
 }
 
 // ParseJWT wrapper juga kalau butuh validasi manual

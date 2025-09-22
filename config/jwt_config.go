@@ -38,11 +38,14 @@ func InitJWT() {
 	JwtExpireHours = expireHour
 }
 
-func GenerateJWT(userID uint) (string, error) {
+// GenerateJWT dengan userID, email, role
+func GenerateJWT(userID uint, email string, role string) (string, error) {
 	expirationTime := time.Now().Add(time.Hour * time.Duration(JwtExpireHours))
 
 	claims := jwt.MapClaims{
 		"user_id": userID,
+		"email":   email,
+		"role":    role,
 		"exp":     expirationTime.Unix(),
 		"iat":     time.Now().Unix(),
 	}
