@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -19,12 +20,19 @@ func ProfileHandler(c *gin.Context) {
 
 	var id uint
 	switch v := userID.(type) {
-	case float64:
-		id = uint(v) 
+	case float64: // JWT kadang decode angka jadi float64
+		id = uint(v)
 	case int:
 		id = uint(v)
+	case string:
+		parsed, err := strconv.Atoi(v)
+		if err != nil {
+			utils.RespondError(c, http.StatusBadRequest, "ID user string tidak bisa dikonversi", v)
+			return
+		}
+		id = uint(parsed)
 	default:
-		utils.RespondError(c, http.StatusBadRequest, "ID user tidak valid", nil)
+		utils.RespondError(c, http.StatusBadRequest, "ID user tidak valid (tipe tidak dikenali)", v)
 		return
 	}
 
@@ -34,7 +42,6 @@ func ProfileHandler(c *gin.Context) {
 		return
 	}
 
-	// Jangan return password hash!
 	utils.RespondSuccess(c, gin.H{
 		"id":       user.ID,
 		"email":    user.Email,
