@@ -12,6 +12,46 @@ import (
 	"server_aquascan/utils"
 )
 
+func RegisterHandler(c *gin.Context) {
+	var req models.RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondError(c, http.StatusBadRequest, "Input tidak valid", err.Error())
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "Gagal mengenkripsi password", err.Error())
+		return
+	}
+
+	// Mapping ke User
+	user := models.User{
+		FullName: req.FullName,
+		Email:    req.Email,
+		Password: string(hashedPassword),
+		Role:     req.Role,
+	}
+
+	if user.Role == "" {
+		user.Role = "staff" // default role
+	}
+
+	if err := config.DB.Create(&user).Error; err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "Gagal membuat user", err.Error())
+		return
+	}
+
+	response := gin.H{
+		"id":    user.ID,
+		"email": user.Email,
+		"role":  user.Role,
+	}
+
+	utils.RespondSuccess(c, gin.H{"user": response}, "Registrasi berhasil")
+}
+
 // GET ALL USERS (hanya admin)
 func GetAllUsersHandler(c *gin.Context) {
 	var users []models.User

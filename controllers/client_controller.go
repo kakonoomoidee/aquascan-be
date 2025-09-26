@@ -13,6 +13,7 @@ import (
 func GetClients(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "10")
+	search := c.Query("search")
 
 	page, _ := strconv.Atoi(pageStr)
 	limit, _ := strconv.Atoi(limitStr)
@@ -25,8 +26,16 @@ func GetClients(c *gin.Context) {
 	var clients []models.Client
 	var totalItems int64
 
-	// hitung total data
-	if err := config.DB.Model(&models.Client{}).Count(&totalItems).Error; err != nil {
+	query := config.DB.Model(&models.Client{})
+
+	// kalau search ada, kasih WHERE
+	if search != "" {
+		likeSearch := "%" + search + "%"
+		query = query.Where("nosbg LIKE ? OR nama LIKE ? OR alamat LIKE ?", likeSearch, likeSearch, likeSearch)
+	}
+
+	// hitung total data setelah filter
+	if err := query.Count(&totalItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal hitung total data"})
 		return
 	}
@@ -34,7 +43,7 @@ func GetClients(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	// ambil data dengan pagination
-	if err := config.DB.Select("id, nosbg, nama, alamat, `long`, lat").
+	if err := query.Select("id, nosbg, nama, alamat, `long`, lat").
 		Order("id ASC").
 		Limit(limit).
 		Offset(offset).

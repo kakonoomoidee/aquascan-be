@@ -29,13 +29,12 @@ func SetupRoutes(router *gin.Engine) {
 	admin := router.Group("/api/admin")
 	admin.Use(middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"))
 	{
-		admin.POST("/regisuser", controllers.RegisterHandler)
-
 		users := admin.Group("/users")
 		{
-			users.GET("/", controllers.GetAllUsersHandler)
+			users.GET("/all", controllers.GetAllUsersHandler)
 			users.PUT("/:id", controllers.UpdateUserHandler)
 			users.DELETE("/:id", controllers.DeleteUserHandler)
+			users.POST("/add", controllers.RegisterHandler)
 		}
 	}
 }
