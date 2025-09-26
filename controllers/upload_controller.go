@@ -16,9 +16,7 @@ import (
 )
 
 type Detection struct {
-	Class      string    `json:"class"`
-	Confidence float64   `json:"confidence"`
-	BBox       []float64 `json:"bbox"`
+	Text string `json:"text"`
 }
 
 type OCRResponse struct {
