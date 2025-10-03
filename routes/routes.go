@@ -21,8 +21,8 @@ func SetupRoutes(router *gin.Engine) {
 		protected.GET("/profile", controllers.ProfileHandler)
 		protected.POST("/upload", controllers.UploadHandler)
 
-		protected.GET("/clients", controllers.GetClients)
-		protected.GET("/clients/:nosbg", controllers.GetClientDetail)
+		protected.GET("/clients", controllers.GetClientsHandler)
+		protected.GET("/clients/:nosbg", controllers.GetClientDetailHandler)
 	}
 
 	// group khusus admin
@@ -35,6 +35,10 @@ func SetupRoutes(router *gin.Engine) {
 			users.PUT("/:id", controllers.UpdateUserHandler)
 			users.DELETE("/:id", controllers.DeleteUserHandler)
 			users.POST("/add", controllers.RegisterHandler)
+		}
+		client := admin.Group("/clients")
+		{
+			client.GET("/:nosbg", controllers.GetMoreClientDetailHandler)
 		}
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"server_aquascan/models"
 )
 
-func GetClients(c *gin.Context) {
+func GetClientsHandler(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "10")
 	search := c.Query("search")
@@ -65,10 +65,25 @@ func GetClients(c *gin.Context) {
 }
 
 // GET /api/clients/:nosbg
-func GetClientDetail(c *gin.Context) {
+func GetClientDetailHandler(c *gin.Context) {
 	nosbg := c.Param("nosbg")
 
 	var client models.Client
+	if err := config.DB.Where("nosbg = ?", nosbg).First(&client).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Data tidak ditemukan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": client,
+	})
+}
+
+// GET /api/admin/clients/:nosbg
+func GetMoreClientDetailHandler(c *gin.Context) {
+	nosbg := c.Param("nosbg")
+
+	var client models.ClientDetail
 	if err := config.DB.Where("nosbg = ?", nosbg).First(&client).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Data tidak ditemukan"})
 		return
