@@ -15,14 +15,21 @@ func SetupRoutes(router *gin.Engine) {
 	}
 
 	// group untuk user login biasa
-	protected := router.Group("/api")
-	protected.Use(middleware.AuthMiddleware())
+	user := router.Group("/api")
+	user.Use(middleware.AuthMiddleware())
 	{
-		protected.GET("/profile", controllers.ProfileHandler)
-		protected.POST("/upload", controllers.UploadHandler)
+		user.GET("/profile", controllers.ProfileHandler)
+		user.GET("/clients", controllers.GetClientsHandler)
 
-		protected.GET("/clients", controllers.GetClientsHandler)
-		protected.GET("/clients/:nosbg", controllers.GetClientDetailHandler)
+	}
+
+	// group untuk petugas (staff dan admin)
+	officer := router.Group("/api/officer")
+	officer.Use(middleware.AuthMiddleware(), middleware.RoleMiddleware("staff", "admin"))
+	{
+		officer.GET("/clients/:nosbg", controllers.GetClientDetailHandler)
+		officer.POST("/ocr", controllers.OCRHandler)
+		officer.POST("/submit", controllers.SubmitOCRHandler)
 	}
 
 	// group khusus admin
@@ -39,6 +46,12 @@ func SetupRoutes(router *gin.Engine) {
 		client := admin.Group("/clients")
 		{
 			client.GET("/:nosbg", controllers.GetMoreClientDetailHandler)
+		}
+		upload := admin.Group("/uploads")
+		{
+			upload.GET("/submitted", controllers.GetSubmittedUploads)
+			upload.POST("/validate", controllers.ValidateUpload)
+			upload.GET("/count", controllers.CountSubmittedUploads)
 		}
 	}
 }

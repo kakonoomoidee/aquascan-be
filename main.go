@@ -24,6 +24,7 @@ func main() {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
+	router.Static("/uploads", "./uploads")
 	routes.SetupRoutes(router)
 	router.Run("0.0.0.0:8080")
 }

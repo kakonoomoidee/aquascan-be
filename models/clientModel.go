@@ -50,7 +50,7 @@ type ClientDetail struct {
 	Lat         string     `json:"lat"`
 	Rata23Bln   float64    `json:"rata2_3bln"`
 	TglDownload *time.Time `json:"tgl_download"`
-	NoMeter     string     `json:"nometer"`
+	NoMeter     string     `json:"nometer" gorm:"column:nometer"`
 	Long1       string     `json:"long1"`
 	Lat1        string     `json:"lat1"`
 	RATA2       float64    `json:"rata2"`
