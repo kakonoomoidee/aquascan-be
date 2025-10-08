@@ -13,19 +13,101 @@ import (
 	"server_aquascan/utils"
 )
 
-// Handler GET - ambil semua upload yang masih "submitted"
+// Handler GET - ambil semua upload yang masih "submitted" dengan pagination
 func GetSubmittedUploads(c *gin.Context) {
-	var uploads []models.Upload
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+	nosbgFilter := c.Query("nosbg")
 
-	if err := config.DB.
-		Where("status = ?", "submitted").
-		Order("uploaded_at DESC").
-		Find(&uploads).Error; err != nil {
-		utils.RespondError(c, http.StatusInternalServerError, "Failed to fetch pending uploads", err.Error())
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	const maxLimit = 100
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	offset := (page - 1) * limit
+
+	baseQuery := config.DB.Model(&models.Upload{}).Where("status = ?", "submitted")
+	if nosbgFilter != "" {
+		baseQuery = baseQuery.Where("nosbg = ?", nosbgFilter)
+	}
+
+	var total int64
+	if err := baseQuery.Count(&total).Error; err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "Failed to count submitted uploads", err.Error())
 		return
 	}
 
-	utils.RespondSuccess(c, uploads, "Pending uploads fetched successfully")
+	var uploads []models.Upload
+	if err := baseQuery.
+		Order("uploaded_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&uploads).Error; err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "Failed to fetch submitted uploads", err.Error())
+		return
+	}
+
+	totalPages := 0
+	if total > 0 {
+		totalPages = int((total + int64(limit) - 1) / int64(limit))
+	}
+
+	utils.RespondSuccess(c, gin.H{
+		"data": uploads,
+		"meta": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": totalPages,
+		},
+	}, "Submitted uploads fetched successfully")
+}
+
+// Handler GET - ambil detail upload dan data validasinya
+func GetUploadValidationDetail(c *gin.Context) {
+	// ambil param id dari URL
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		utils.RespondError(c, http.StatusBadRequest, "Invalid upload ID", nil)
+		return
+	}
+
+	// ambil upload-nya
+	var upload models.Upload
+	if err := config.DB.First(&upload, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.RespondError(c, http.StatusNotFound, "Upload not found", nil)
+			return
+		}
+		utils.RespondError(c, http.StatusInternalServerError, "Failed to fetch upload", err.Error())
+		return
+	}
+
+	// ambil riwayat validasinya (jika ada)
+	var validations []models.UploadValidation
+	if err := config.DB.
+		Where("upload_id = ?", id).
+		Order("validated_at DESC").
+		Find(&validations).Error; err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "Failed to fetch validation records", err.Error())
+		return
+	}
+
+	utils.RespondSuccess(c, gin.H{
+		"upload":      upload,
+		"validations": validations,
+	}, "Upload validation detail fetched successfully")
 }
 
 // Handler POST - validasi upload

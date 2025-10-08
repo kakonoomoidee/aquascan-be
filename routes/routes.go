@@ -50,6 +50,7 @@ func SetupRoutes(router *gin.Engine) {
 		upload := admin.Group("/uploads")
 		{
 			upload.GET("/submitted", controllers.GetSubmittedUploads)
+			upload.GET("/:id/validate", controllers.GetUploadValidationDetail)
 			upload.POST("/validate", controllers.ValidateUpload)
 			upload.GET("/count", controllers.CountSubmittedUploads)
 		}
