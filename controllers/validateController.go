@@ -192,20 +192,3 @@ func ValidateUpload(c *gin.Context) {
 		"status":    status,
 	}, "Upload validation saved successfully")
 }
-
-// Handler GET - hitung berapa banyak upload yang masih "submitted"
-func CountSubmittedUploads(c *gin.Context) {
-	var count int64
-
-	if err := config.DB.
-		Model(&models.Upload{}).
-		Where("status = ?", "submitted").
-		Count(&count).Error; err != nil {
-		utils.RespondError(c, http.StatusInternalServerError, "Failed to count submitted uploads", err.Error())
-		return
-	}
-
-	utils.RespondSuccess(c, gin.H{
-		"count": count,
-	}, "Counted submitted uploads successfully")
-}

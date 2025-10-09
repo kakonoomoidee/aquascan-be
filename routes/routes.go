@@ -52,7 +52,13 @@ func SetupRoutes(router *gin.Engine) {
 			upload.GET("/submitted", controllers.GetSubmittedUploads)
 			upload.GET("/:id/validate", controllers.GetUploadValidationDetail)
 			upload.POST("/validate", controllers.ValidateUpload)
-			upload.GET("/count", controllers.CountSubmittedUploads)
+		}
+		stats := admin.Group("/statistics")
+		{
+			stats.GET("/submittedUploads", controllers.GetSubmittedUploadsCount)
+			stats.GET("/validatedToday", controllers.GetValidatedTodayCount)
+			stats.GET("/activeOfficers", controllers.GetActiveOfficersCount)
+			stats.GET("/totalSubmissions", controllers.GetTotalSubmissionsCount)
 		}
 	}
 }

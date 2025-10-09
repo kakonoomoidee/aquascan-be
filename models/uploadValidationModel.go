@@ -30,7 +30,6 @@ func (v *UploadValidation) AfterCreate(tx *gorm.DB) (err error) {
 			return err
 		}
 
-		// ✅ Pastikan hasil bacaan dikonversi ke float64 valid
 		valStr := strings.ReplaceAll(upload.HasilBacaan, ",", ".")
 		meterBaca, err := strconv.ParseFloat(valStr, 64)
 		if err != nil {
